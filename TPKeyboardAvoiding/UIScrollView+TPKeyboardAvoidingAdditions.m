@@ -26,6 +26,7 @@ static const int kStateKey;
 @property (nonatomic, assign) BOOL         keyboardVisible;
 @property (nonatomic, assign) CGRect       keyboardRect;
 @property (nonatomic, assign) CGSize       priorContentSize;
+@property (nonatomic, assign) bool         originalContentWasZero;
 
 
 @property (nonatomic) BOOL priorPagingEnabled;
@@ -71,6 +72,7 @@ static const int kStateKey;
         state.priorContentSize = self.contentSize;
         
         if ( CGSizeEqualToSize(self.contentSize, CGSizeZero) ) {
+            state.originalContentWasZero = YES;
             // Set the content size, if it's not set. Do not set content size explicitly if auto-layout
             // is being used to manage subviews
             self.contentSize = [self TPKeyboardAvoiding_calculatedContentSizeFromSubviewFrames];
@@ -118,7 +120,10 @@ static const int kStateKey;
     [UIView setAnimationDuration:[[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] floatValue]];
     
     if ( [self isKindOfClass:[TPKeyboardAvoidingScrollView class]] ) {
+      if (!state.originalContentWasZero)
         self.contentSize = state.priorContentSize;
+      else
+        self.contentSize = CGSizeMake(0,0);//state.priorContentSize;
     }
     
     self.contentInset = state.priorInset;
@@ -137,7 +142,6 @@ static const int kStateKey;
 - (void)TPKeyboardAvoiding_updateFromContentSizeChange {
     TPKeyboardAvoidingState *state = self.keyboardAvoidingState;
     if ( state.keyboardVisible ) {
-		state.priorContentSize = self.contentSize;
         self.contentInset = [self TPKeyboardAvoiding_contentInsetForKeyboard];
     }
 }
